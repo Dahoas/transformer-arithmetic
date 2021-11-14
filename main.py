@@ -1,3 +1,4 @@
+from numpy.lib import polynomial
 import model
 import torch
 import torch.nn.functional as F
@@ -7,6 +8,7 @@ import pytorch_lightning as pl
 import expr
 import math
 from pytorch_lightning.callbacks import ModelCheckpoint
+import poly
 
 class Model(pl.LightningModule):
     def __init__(self, batch_size=16):
@@ -37,11 +39,12 @@ class Model(pl.LightningModule):
                 begin = 0
             else:
                 begin = begins[i]
+            #Why do we cross entropy begin:l-1 and begin+1:l? Is it because of the masking thing?
             result.append(F.cross_entropy(v[begin:l-1], s[begin+1:l], reduction='sum'))
         return result
     
     def train_dataloader(self):
-        dataset = expr.ExpressionDataset(100000)
+        dataset = poly.PolynomialDataset()
         loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
         return loader
     

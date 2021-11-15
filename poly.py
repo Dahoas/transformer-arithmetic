@@ -1,13 +1,21 @@
 from torch.utils.data import Dataset
 import numpy as np
 from numpy.random import MT19937, RandomState, SeedSequence
+import random
+import re
 
 class PolynomialDataset(Dataset):
-    def __init__(self,  begin=0):
+    def __init__(self,  mode='train', begin=0):
         super(PolynomialDataset, self).__init__()
         file_path = 'train.txt'
         data = open(file_path, 'r').readlines()
-        data = [line.strip().split("=") for line in data]
+        if mode == 'val':
+            random.shuffle(data)
+            data = data[:len(data) // 10]
+        elif mode == 'train':
+            random.shuffle(data)
+            data = data[:len(data)]
+        data = [re.sub(r'[a-z]', 'x', line) for line in data]
         self.data = data
         self.begin = begin
         self.count = len(self.data)

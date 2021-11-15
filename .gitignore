@@ -143,4 +143,7 @@ cython_debug/
 lightning_logs
 
 # Ckpt file
-.ckpt
+*.ckpt
+
+#alt_train.txt
+alt_train.txt

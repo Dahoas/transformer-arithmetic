@@ -16,19 +16,20 @@ class Model(pl.LightningModule):
         self.batch_size = batch_size
         self.model = model.GPT2LMHeadModel(
             vocab_size=128,
-            n_positions=1024,
-            n_layer=4,
+            n_positions=64,
+            n_layer=2,
             n_embd=512,
-            n_ctx=1024,
-            n_state=2048,
-            n_head=8,
-            dropout=0.9
+            n_ctx=64,
+            n_state=128,
+            n_head=4,
+            dropout=0.5
         )
 
     def forward(self, x):
         return self.model(x)
     
-    def get_losses(self, strs, begins=None):
+    #TODO: begins: for validation
+    def get_losses(self, strs, begins=None, mode='train'):
         lengths = [len(s) for s in strs]
         length = max(lengths)
         strs = torch.stack([torch.tensor(bytearray(s.ljust(length, '\0'), 'ascii'), device=self.device) for s in strs])
@@ -39,17 +40,16 @@ class Model(pl.LightningModule):
                 begin = 0
             else:
                 begin = begins[i]
-            #Why do we cross entropy begin:l-1 and begin+1:l? Is it because of the masking thing?
             result.append(F.cross_entropy(v[begin:l-1], s[begin+1:l], reduction='sum'))
         return result
     
     def train_dataloader(self):
-        dataset = poly.PolynomialDataset()
+        dataset = poly.PolynomialDataset(mode='train')
         loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
         return loader
     
     def training_step(self, batch, batch_nb):
-        losses = self.get_losses(batch)
+        losses = self.get_losses(batch, mode='val')
         loss = torch.stack(losses).mean()
         return {'loss': loss, 'log': {'train_loss': loss}}
     
@@ -57,7 +57,7 @@ class Model(pl.LightningModule):
         return optim.Adam(self.parameters(), lr=0.00025)
     
     def validation_step(self, batch, batch_nb):
-        losses = self.get_losses(batch, begins=[len("12345*54321;")]*len(batch))
+        losses = self.get_losses(batch, mode='val')
         losses = torch.stack(losses)
         return {'val_loss': losses.mean(), 'expected_accuracy': torch.exp(-losses).mean()}
     
@@ -67,7 +67,7 @@ class Model(pl.LightningModule):
         return {'val_loss': avg_loss, 'log': {'val_loss': avg_loss, 'avg_accuracy': avg_accuracy}}
     
     def val_dataloader(self):
-        dataset = expr.ExpressionDataset(1000, 100000)
+        dataset = poly.PolynomialDataset(mode='val')
         loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
         return loader
 

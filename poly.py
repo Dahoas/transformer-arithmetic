@@ -15,7 +15,7 @@ class PolynomialDataset(Dataset):
         elif mode == 'train':
             random.shuffle(data)
             data = data[:len(data)]
-        data = [re.sub(r'[a-z]', 'x', line) for line in data]
+        data = [re.sub(r'[a-z]', 'x', line)+';' for line in data]
         self.data = data
         self.begin = begin
         self.count = len(self.data)

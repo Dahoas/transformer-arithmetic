@@ -9,3 +9,4 @@ if __name__ == "__main__":
         accumulate_grad_batches=8,
         checkpoint_callback=ModelCheckpoint(),)
     trainer.fit(m)
+    print("DONE!")

@@ -5,7 +5,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
-import expr
 import math
 from pytorch_lightning.callbacks import ModelCheckpoint
 import sequence
@@ -78,34 +77,15 @@ class Model(pl.LightningModule):
         for (a, b), y in batch:
             prompt = "%d*%d;" % (a, b)
             result = self.generate(prompt, 1024)
-            answer = expr.get_multiplication_answer(result)
             total += 1
-            if answer == y:
-                correct += 1
         return {'accuracy': correct / total, 'correct': correct, 'total': total}
 
     def test_eopch_end(self, outputs):
-        correct = torch.stack([x['correct'] for x in outputs]).sum()
-        total = torch.stack([x['total'] for x in outputs]).sum()
-        return {'accuracy': correct / total, 'correct': correct, 'total': total}
+        raise NotImplemented
 
     def test_dataloader(self):
-        dataset = expr.TestDataset(1000, 200000)
-        loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
-        return loader
+        raise NotImplemented
 
     @torch.no_grad()
-    def generate(self, expr, max_length):
-        self.eval()
-        curi = 0
-        past = None
-        while len(expr) < max_length:
-            cur = torch.tensor([bytearray(expr[curi:], 'ascii')], dtype=torch.long, device=self.device)
-            probs, past = self.model(cur, past=past)
-            curi = len(expr)
-            probs = F.softmax(probs[0, -1], dim=-1)
-            sample = torch.multinomial(probs, 1)[0]
-            expr += chr(sample)
-            if sample == ord('$'):
-                break
-        return expr
+    def generate(self, max_length):
+        raise NotImplemented

@@ -3,23 +3,25 @@ import numpy as np
 from numpy.random import MT19937, RandomState, SeedSequence
 import random
 import re
+import pandas as pd
 
-class PolynomialDataset(Dataset):
+class SequenceDataset(Dataset):
     def __init__(self,  mode='train', begin=0):
-        super(PolynomialDataset, self).__init__()
-        file_path = 'train.txt'
-        data = open(file_path, 'r').readlines()
+        super(SequenceDataset, self).__init__()
+        file_path = 'train.csv'
+        data = pd.read_csv(file_path)
+        data = data['Sequence']
         if mode == 'val':
             random.shuffle(data)
             data = data[:len(data) // 10]
         elif mode == 'train':
             random.shuffle(data)
             data = data[:len(data)]
-        data = [re.sub(r'[a-z]', 'x', line)+';' for line in data]
+        data = [line+';' for line in data]
         self.data = data
         self.begin = begin
         self.count = len(self.data)
-        
+
     def __getitem__(self, i):
         assert i < self.count and i >= 0, "Out of bounds"
         return self.data[i]

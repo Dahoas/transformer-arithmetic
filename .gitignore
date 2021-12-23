@@ -147,3 +147,10 @@ lightning_logs
 
 #alt_train.txt
 alt_train.txt
+
+#Date file
+*.csv
+train.csv
+
+#Misc
+data_test.py
